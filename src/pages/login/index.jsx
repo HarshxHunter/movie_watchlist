@@ -6,7 +6,7 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { state, dispatch } = useUserContext();
+    const { dispatch } = useUserContext();
 
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
