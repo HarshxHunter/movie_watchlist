@@ -5,8 +5,8 @@ const UserContext = createContext();
 
 // Initial state
 const initialState = {
-    currentUser: null, // To store the currently logged-in user
-    users: [], // Array to store users and their associated movies
+    currentUser: null,
+    users: [],
 };
 
 // Reducer function to handle actions
@@ -60,6 +60,14 @@ const userReducer = (state, action) => {
         case 'REMOVE_FROM_WATCHLIST':
             return {
                 ...state,
+                users: state.users.map(user =>
+                    user.email === state.currentUser.email
+                        ? {
+                            ...user,
+                            movies: user.movies.filter((movie) => movie.imdbID !== action.payload.imdbID)
+                        }
+                        : user
+                ),
                 currentUser: {
                     ...state.currentUser,
                     movies: state.currentUser.movies.filter(
