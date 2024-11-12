@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUserContext } from '../../context/globalState';
 import { Link, useNavigate } from 'react-router-dom';
+import LoginDialog from '../../components/loginDialog';
 
 const SearchMovies = () => {
     const [query, setQuery] = useState('');
@@ -8,9 +9,34 @@ const SearchMovies = () => {
     const [movieDetails, setMovieDetails] = useState(null); // State for detailed movie information
     const [isMenuOpen, setIsMenuOpen] = useState(false); // State for side menu visibility
     const { state, dispatch } = useUserContext();
+    const { currentUser } = state;
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const moviesPerPage = 3;
+
+    // const [page, setPage] = useState(2);
+    // const [perPage, setPerPage] = useState(3);
+
+    // useEffect(() => {
+    //     console.log("asdasd");
+    //     const startIndex = (page - 1) * perPage;
+    //     const endIndex = startIndex + perPage;
+    //     setMovies(movies.slice(startIndex, endIndex));
+    // }, [page, perPage,]);
+
+    useEffect(() => {
+        if (!currentUser) {
+            setOpenDialog(true);
+        }
+    }, [currentUser]);
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        navigate('/'); // Redirect to login
+    };
 
     const handleLogout = () => {
         // Clear the current user from global state
@@ -22,7 +48,7 @@ const SearchMovies = () => {
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
-    
+
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -88,86 +114,105 @@ const SearchMovies = () => {
     const userEmail = state.currentUser?.email || 'User';
     const userInitial = userEmail.charAt(0).toUpperCase();
 
+    const handleNext = () => {
+        if (currentPage < Math.ceil(movies.length / moviesPerPage)) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const startIndex = (currentPage - 1) * moviesPerPage;
+    const currentMovies = movies.slice(startIndex, startIndex + moviesPerPage);
+
+    // useEffect()
+
     return (
         <div className='w-full h-full flex flex-col relative'>
             {/* Side Menu */}
+            {openDialog && <LoginDialog open={openDialog} onClose={handleCloseDialog} />}
+
             {isMenuOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
                     <div className="bg-white w-3/4 h-full p-4 shadow-lg transform transition-transform duration-300 translate-x-0">
                         <button onClick={toggleMenu} className="absolute top-2 right-2 text-lg">X</button>
                         <h2 className="text-xl font-bold mb-4">Menu</h2>
                         <nav>
-                        <ul className="space-y-4">
-                            <li>
+                            <ul className="space-y-4">
+                                <li>
 
-                                <Link to="/search" className="hover:text-blue-400">
-                                    <div className='p-2 bg-red-400 rounded-lg flex gap-2'>
-                                        <img
-                                            width={24}
-                                            height={24}
-                                            alt={"home"}
-                                            src={'/icons8-home.svg'}
-                                            className="cursor-pointer"
-                                        />
-                                        Search Movies
-                                    </div>
-                                </Link>
+                                    <Link to="/search" className="hover:text-blue-400">
+                                        <div className='p-2 bg-red-400 rounded-lg flex gap-2'>
+                                            <img
+                                                width={24}
+                                                height={24}
+                                                alt={"home"}
+                                                src={'/icons8-home.svg'}
+                                                className="cursor-pointer"
+                                            />
+                                            Search Movies
+                                        </div>
+                                    </Link>
 
-                            </li>
-                            <hr />
-                            {/* <div className='p-2 bg-red-400 rounded-lg'> */}
-                            <li>
-                                <Link to="/list" className="hover:text-blue-400">
-                                    <div className='p-2 bg-red-400 rounded-lg flex gap-2'>
-                                        <img
-                                            width={24}
-                                            height={24}
-                                            alt={"list"}
-                                            src={'/list.png'}
-                                            className="cursor-pointer"
-                                        />
-                                        Your Watchlist
-                                    </div>
-                                </Link>
-                            </li>
+                                </li>
+                                <hr />
+                                {/* <div className='p-2 bg-red-400 rounded-lg'> */}
+                                <li>
+                                    <Link to="/list" className="hover:text-blue-400">
+                                        <div className='p-2 bg-red-400 rounded-lg flex gap-2'>
+                                            <img
+                                                width={24}
+                                                height={24}
+                                                alt={"list"}
+                                                src={'/list.png'}
+                                                className="cursor-pointer"
+                                            />
+                                            Your Watchlist
+                                        </div>
+                                    </Link>
+                                </li>
 
-                        </ul>
-                    </nav>
-                    <div className="flex items-center justify-between mt-6 relative bg-blue-400 rounded-lg p-2" ref={dropdownRef}>
-                    <div className="flex items-center">
-                        {/* User Initial in a Circle */}
-                        <div className="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded-full mr-2">
-                            {userInitial}
-                        </div>
-                        {/* User Email */}
-                        <span className="text-white">{userEmail}</span>
-                    </div>
+                            </ul>
+                        </nav>
+                        <div className="flex items-center justify-between mt-6 relative bg-blue-400 rounded-lg p-2" ref={dropdownRef}>
+                            <div className="flex items-center">
+                                {/* User Initial in a Circle */}
+                                <div className="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded-full mr-2">
+                                    {userInitial}
+                                </div>
+                                {/* User Email */}
+                                <span className="text-white">{userEmail}</span>
+                            </div>
 
-                    {/* Hamburger Icon */}
-                    <button onClick={toggleDropdown} className="focus:outline-none">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                        </svg>
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {dropdownOpen && (
-                        <div className="absolute right-0 bottom-12 mt-2 w-48 bg-gray-200 text-black rounded shadow-lg z-50">
-                            <button
-                                onClick={handleLogout}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-400 rounded"
-                            >
-                                Logout
+                            {/* Hamburger Icon */}
+                            <button onClick={toggleDropdown} className="focus:outline-none">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                                </svg>
                             </button>
+
+                            {/* Dropdown Menu */}
+                            {dropdownOpen && (
+                                <div className="absolute right-0 bottom-12 mt-2 w-48 bg-gray-200 text-black rounded shadow-lg z-50">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="block w-full text-left px-4 py-2 hover:bg-gray-400 rounded"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
                     </div>
                 </div>
             )}
@@ -243,61 +288,81 @@ const SearchMovies = () => {
             {/* Movie List */}
             <div className='w-full overflow-x-auto whitespace-nowrap py-4 shadow-lg'>
                 {movies.length > 0 ? (
-                    <div className='flex space-x-4'>
-                        {movies.map((movie) => {
-                            const isInWatchlist = state.currentUser?.movies.some((m) => m.imdbID === movie.imdbID);
+                    <div className='flex flex-col gap-4'>
+                        <div className='flex space-x-4'>
+                            {currentMovies.map((movie) => {
+                                const isInWatchlist = state.currentUser?.movies.some((m) => m.imdbID === movie.imdbID);
 
-                            return (
-                                <div
-                                    key={movie.imdbID}
-                                    className='border flex flex-col w-48 min-w-[200px] shadow-md relative group hover:border-green-500'
-                                    style={{ minWidth: '200px' }}
-                                >
-                                    {/* Movie Poster */}
-                                    <div className="relative">
-                                        <img
-                                            src={movie.Poster}
-                                            alt={movie.Title}
-                                            className='w-full h-64 object-cover'
-                                        />
-                                        <div className='absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex justify-start items-start p-2'>
+                                return (
+                                    <div
+                                        key={movie.imdbID}
+                                        className='border flex flex-col w-48 min-w-[200px] shadow-md relative group hover:border-green-500'
+                                        style={{ minWidth: '200px' }}
+                                    >
+                                        {/* Movie Poster */}
+                                        <div className="relative">
                                             <img
-                                                width={24}
-                                                height={24}
-                                                alt={isInWatchlist ? "ticked" : "bookmark"}
-                                                src={isInWatchlist ? '/checked.png' : '/bookmark.png'}
-                                                className="cursor-pointer"
-                                                onClick={() => addToWatchlist(movie)}
+                                                src={movie.Poster}
+                                                alt={movie.Title}
+                                                className='w-full h-64 object-cover'
                                             />
+                                            <div className='absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex justify-start items-start p-2'>
+                                                <img
+                                                    width={24}
+                                                    height={24}
+                                                    alt={isInWatchlist ? "ticked" : "bookmark"}
+                                                    src={isInWatchlist ? '/checked.png' : '/bookmark.png'}
+                                                    className="cursor-pointer"
+                                                    onClick={() => addToWatchlist(movie)}
+                                                />
+                                            </div>
                                         </div>
+
+                                        {/* Movie Details */}
+                                        <h2 className='text-lg font-bold mt-2 text-wrap'>{movie.Title}</h2>
+                                        <p>{movie.Year}</p>
+                                        <div className='flex-grow'></div>
+
+                                        {/* Add to Watchlist Button */}
+                                        <button
+                                            className='bg-green-500 text-white py-1 px-2 rounded mt-2 w-full'
+                                            style={{ minWidth: '120px' }}
+                                            onClick={() => addToWatchlist(movie)}
+                                        >
+                                            {isInWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                                        </button>
+
+                                        {/* View Details Button */}
+                                        <button
+                                            className='bg-green-500 text-white py-1 px-2 rounded mt-2 w-full'
+                                            style={{ minWidth: '120px' }}
+                                            onClick={() => fetchMovieDetails(movie.imdbID)} // Fetch movie details on click
+                                        >
+                                            View Details
+                                        </button>
                                     </div>
+                                );
+                            })}
+                        </div>
 
-                                    {/* Movie Details */}
-                                    <h2 className='text-lg font-bold mt-2 text-wrap'>{movie.Title}</h2>
-                                    <p>{movie.Year}</p>
-                                    <div className='flex-grow'></div>
-
-                                    {/* Add to Watchlist Button */}
-                                    <button
-                                        className='bg-green-500 text-white py-1 px-2 rounded mt-2 w-full'
-                                        style={{ minWidth: '120px' }}
-                                        onClick={() => addToWatchlist(movie)}
-                                    >
-                                        {isInWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
-                                    </button>
-
-                                    {/* View Details Button */}
-                                    <button
-                                        className='bg-green-500 text-white py-1 px-2 rounded mt-2 w-full'
-                                        style={{ minWidth: '120px' }}
-                                        onClick={() => fetchMovieDetails(movie.imdbID)} // Fetch movie details on click
-                                    >
-                                        View Details
-                                    </button>
-                                </div>
-                            );
-                        })}
+                        <div className='flex gap-2'>
+                            <button
+                                onClick={handlePrev}
+                                disabled={currentPage === 1}
+                                className='bg-green-300 p-2 disabled:bg-gray-300'
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                disabled={currentPage >= Math.ceil(movies.length / moviesPerPage)}
+                                className='bg-green-300 p-2 disabled:bg-gray-300'
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
+
                 ) : (
                     <p>No movies found.</p>
                 )}
